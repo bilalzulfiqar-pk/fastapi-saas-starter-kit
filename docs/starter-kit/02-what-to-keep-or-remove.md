@@ -10,6 +10,7 @@
 - Settings layout
 - Error handling
 - Security helpers
+- Docker, migrations, and verification workflow unless your team replaces them intentionally
 
 ## Optional post-MVP modules
 
@@ -26,4 +27,4 @@
 - Branding
 - Seed/demo content
 - Sidebar links once product modules exist
-
+- Billing placeholder copy if your product is not subscription-based

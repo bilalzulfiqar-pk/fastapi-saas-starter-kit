@@ -7,11 +7,22 @@
 - Database: managed PostgreSQL
 - Redis: managed Redis or local container in small environments
 
+## Local Docker workflow
+
+1. Copy `.env.example` to `.env`.
+2. Run `docker compose up --build`.
+3. Confirm:
+   - `http://localhost:3000`
+   - `http://localhost:8000/health`
+   - `http://localhost:8000/readiness`
+
 ## Production checklist
 
 - Set a strong `SECRET_KEY`
+- Set real `APP_URL`, `API_URL`, `NEXT_PUBLIC_APP_URL`, and `NEXT_PUBLIC_API_URL`
 - Set `COOKIE_SECURE=true`
 - Configure a real `FRONTEND_ORIGINS` allowlist
+- Set production `DATABASE_URL` and `REDIS_URL`
 - Run `alembic upgrade head`
 - Use HTTPS for both frontend and backend
 - Replace `ConsoleEmailProvider` with a real provider before enabling password reset or verification flows

@@ -2,7 +2,7 @@
 
 A reusable SaaS starter kit built with Next.js, FastAPI, PostgreSQL, SQLModel, Redis, Docker Compose, and starter documentation.
 
-## What this starter includes
+## What ships in the MVP
 
 - Cookie-first auth with secure defaults
 - Workspace-based multi-tenancy
@@ -11,21 +11,59 @@ A reusable SaaS starter kit built with Next.js, FastAPI, PostgreSQL, SQLModel, R
 - Dashboard shell and settings pages
 - Centralized API errors and basic logging
 - Redis-backed rate limiting with in-memory fallback
-- Docker Compose and starter docs
+- Docker Compose, tests, and starter docs
+
+## What is intentionally out of scope
+
+- Product-specific modules such as CRM, inventory, LMS, booking, support, or AI/RAG
+- API keys
+- Audit logs
+- Password reset and email verification
+- Real email delivery providers
+- Stripe checkout, customer portal, and webhooks
 
 ## Project layout
 
 ```txt
-apps/api   FastAPI backend
-apps/web   Next.js frontend
-docs/      Architecture, API, security, deployment, and starter conversion notes
+apps/api     FastAPI backend
+apps/web     Next.js frontend
+docs/        Architecture, API, security, deployment, and starter conversion notes
+scripts/     Optional verification and helper scripts
 ```
 
-## Quick start
+## Requirements
+
+- Docker Desktop or another Docker engine with Compose support
+- Optional for local non-Docker checks:
+  - Python 3.11+
+  - Node.js 22+
+  - `pnpm`
+
+## Quick start with Docker
 
 1. Copy `.env.example` to `.env`.
 2. Run `docker compose up --build`.
 3. Open `http://localhost:3000`.
+4. Use `http://localhost:8000/health` and `http://localhost:8000/readiness` if you want to confirm API health.
+
+## Useful commands
+
+Most teams can stay Docker-first. The commands below cover both the Docker workflow and optional local development workflows.
+
+- `pnpm dev`
+  Starts the Docker Compose stack from the repo root.
+- `pnpm dev:web`
+  Starts the Next.js app locally outside Docker.
+- `pnpm dev:api`
+  Starts the FastAPI app locally outside Docker.
+- `pnpm lint`
+  Runs the web ESLint checks.
+- `pnpm typecheck`
+  Runs the web TypeScript checks.
+- `pnpm test:api`
+  Runs the backend pytest suite.
+- `pnpm test:web`
+  Runs the frontend Vitest suite.
 
 ## Verification
 
@@ -51,7 +89,9 @@ Recommended smoke flow:
 ## Key implementation notes
 
 - The frontend uses `Next.js 16` and `proxy.ts`.
+- The frontend uses TanStack Query for server state and React context for small UI state.
 - The backend uses `SQLModel` with explicit model imports in `alembic/env.py`.
+- Auth uses a short-lived access cookie, a path-scoped refresh cookie, and a lightweight session marker cookie for protected-route recovery.
 - `COOKIE_DOMAIN=""` is the development default so cookies remain host-only on localhost.
 - Real email sending is out of scope for v1; `ConsoleEmailProvider` logs email content instead.
 
@@ -61,4 +101,5 @@ Recommended smoke flow:
 - [API](docs/api.md)
 - [Security](docs/security.md)
 - [Deployment](docs/deployment.md)
+- [Scripts](scripts/README.md)
 - [Starter kit guide](docs/starter-kit/00-start-here.md)

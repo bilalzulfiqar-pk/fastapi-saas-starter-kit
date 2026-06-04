@@ -5,6 +5,8 @@
 - Access tokens are stored in an HttpOnly cookie with a short lifetime
 - Refresh tokens are random opaque secrets stored hashed in the database
 - Refresh cookies are path-scoped to `/api/v1/auth`
+- A lightweight session marker cookie is scoped to `/` so protected routes can distinguish recoverable sessions from signed-out visitors
+- Refresh tokens are rotated on successful refresh and revoked on logout
 - Passwords are hashed with Argon2id
 
 ## CSRF and origin validation
