@@ -10,7 +10,7 @@ from app.modules.users.models import User
 from app.modules.workspaces.models import WorkspaceMember
 
 from .conftest import auth_headers
-from .test_auth import register_user
+from .test_auth import login_user, register_user
 
 
 def create_workspace(client: TestClient, name: str = "Acme Labs"):
@@ -87,3 +87,54 @@ def test_last_owner_cannot_be_demoted_or_removed(client: TestClient):
     remove = client.delete(f"/api/v1/workspaces/{workspace_id}/members/{owner_member_id}", headers=auth_headers())
     assert remove.status_code == 400
     assert remove.json()["error"]["code"] == "last_owner_required"
+
+
+def test_admin_cannot_grant_revoke_or_remove_owner_roles(client: TestClient, session: Session):
+    register_user(client, email="phase3-owner@example.com")
+    workspace = create_workspace(client)
+    workspace_id = UUID(workspace.json()["data"]["workspace"]["id"])
+
+    admin_user = User(email="admin@example.com", name="Admin", password_hash=hash_password("supersecret"))
+    co_owner_user = User(email="owner2@example.com", name="Co Owner", password_hash=hash_password("supersecret"))
+    session.add(admin_user)
+    session.add(co_owner_user)
+    session.commit()
+    session.refresh(admin_user)
+    session.refresh(co_owner_user)
+
+    admin_membership = WorkspaceMember(workspace_id=workspace_id, user_id=admin_user.id, role="admin")
+    co_owner_membership = WorkspaceMember(workspace_id=workspace_id, user_id=co_owner_user.id, role="owner")
+    session.add(admin_membership)
+    session.add(co_owner_membership)
+    session.commit()
+    session.refresh(admin_membership)
+    session.refresh(co_owner_membership)
+
+    logout = client.post("/api/v1/auth/logout", headers=auth_headers())
+    assert logout.status_code == 200
+
+    login = login_user(client, email="admin@example.com")
+    assert login.status_code == 200
+
+    grant_owner = client.patch(
+        f"/api/v1/workspaces/{workspace_id}/members/{admin_membership.id}",
+        headers=auth_headers(),
+        json={"role": "owner"},
+    )
+    assert grant_owner.status_code == 403
+    assert grant_owner.json()["error"]["code"] == "owner_role_forbidden"
+
+    revoke_owner = client.patch(
+        f"/api/v1/workspaces/{workspace_id}/members/{co_owner_membership.id}",
+        headers=auth_headers(),
+        json={"role": "admin"},
+    )
+    assert revoke_owner.status_code == 403
+    assert revoke_owner.json()["error"]["code"] == "owner_role_forbidden"
+
+    remove_owner = client.delete(
+        f"/api/v1/workspaces/{workspace_id}/members/{co_owner_membership.id}",
+        headers=auth_headers(),
+    )
+    assert remove_owner.status_code == 403
+    assert remove_owner.json()["error"]["code"] == "owner_role_forbidden"

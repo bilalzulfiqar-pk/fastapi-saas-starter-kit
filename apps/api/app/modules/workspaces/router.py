@@ -88,8 +88,8 @@ def patch_workspace_member(
     current_user: User = Depends(require_active_user),
     session: Session = Depends(get_session),
 ):
-    require_workspace_admin(session, workspace_id, current_user.id)
-    member = update_member_role(session, workspace_id, member_id, payload)
+    _, actor_member = require_workspace_admin(session, workspace_id, current_user.id)
+    member = update_member_role(session, workspace_id, actor_member, member_id, payload)
     return {"data": {"member": {"id": member.id, "role": member.role}}, "message": "Member role updated"}
 
 
@@ -100,7 +100,6 @@ def delete_workspace_member(
     current_user: User = Depends(require_active_user),
     session: Session = Depends(get_session),
 ):
-    require_workspace_admin(session, workspace_id, current_user.id)
-    remove_member(session, workspace_id, member_id)
+    _, actor_member = require_workspace_admin(session, workspace_id, current_user.id)
+    remove_member(session, workspace_id, actor_member, member_id)
     return {"data": {"success": True}, "message": "Member removed"}
-

@@ -142,9 +142,24 @@ def _owner_count(session: Session, workspace_id: UUID) -> int:
     return len(owners)
 
 
+def _ensure_owner_role_management_allowed(
+    actor_member: WorkspaceMember,
+    target_member: WorkspaceMember,
+    next_role: str | None = None,
+) -> None:
+    touches_owner_role = target_member.role == "owner" or next_role == "owner"
+    if touches_owner_role and actor_member.role != "owner":
+        raise AppError(
+            code="owner_role_forbidden",
+            message="Only workspace owners can grant, revoke, or remove owner roles",
+            status_code=403,
+        )
+
+
 def update_member_role(
     session: Session,
     workspace_id: UUID,
+    actor_member: WorkspaceMember,
     member_id: UUID,
     payload: MemberRoleUpdateInput,
 ) -> WorkspaceMember:
@@ -154,6 +169,8 @@ def update_member_role(
     member = session.get(WorkspaceMember, member_id)
     if not member or member.workspace_id != workspace_id:
         raise AppError(code="member_not_found", message="Member not found", status_code=404)
+
+    _ensure_owner_role_management_allowed(actor_member, member, payload.role)
 
     if member.role == "owner" and payload.role != "owner" and _owner_count(session, workspace_id) <= 1:
         raise AppError(code="last_owner_required", message="A workspace must always have at least one owner", status_code=400)
@@ -166,12 +183,19 @@ def update_member_role(
     return member
 
 
-def remove_member(session: Session, workspace_id: UUID, member_id: UUID) -> None:
+def remove_member(
+    session: Session,
+    workspace_id: UUID,
+    actor_member: WorkspaceMember,
+    member_id: UUID,
+) -> None:
     member = session.get(WorkspaceMember, member_id)
     if not member or member.workspace_id != workspace_id:
         raise AppError(code="member_not_found", message="Member not found", status_code=404)
+
+    _ensure_owner_role_management_allowed(actor_member, member)
+
     if member.role == "owner" and _owner_count(session, workspace_id) <= 1:
         raise AppError(code="last_owner_required", message="A workspace must always have at least one owner", status_code=400)
     session.delete(member)
     session.commit()
-

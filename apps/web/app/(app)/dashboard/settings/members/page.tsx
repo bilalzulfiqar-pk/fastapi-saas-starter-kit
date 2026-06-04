@@ -23,6 +23,7 @@ export default function MembersSettingsPage() {
   const removeMember = useRemoveWorkspaceMember(workspaceId);
   const activeWorkspace = workspaces.data?.data.workspaces.find((workspace) => workspace.id === workspaceId);
   const canManageMembers = activeWorkspace?.role === "owner" || activeWorkspace?.role === "admin";
+  const canManageOwnership = activeWorkspace?.role === "owner";
   const currentUserId = currentUser.data?.data.user.id;
 
   async function handleRoleChange(memberId: string, event: ChangeEvent<HTMLSelectElement>) {
@@ -44,6 +45,9 @@ export default function MembersSettingsPage() {
         {!canManageMembers && activeWorkspace ? (
           <p className="muted">Only workspace owners and admins can change roles or remove members.</p>
         ) : null}
+        {canManageMembers && !canManageOwnership ? (
+          <p className="muted">Only workspace owners can grant, revoke, or remove owner roles.</p>
+        ) : null}
         {updateRole.error ? <p className="error">{updateRole.error.message}</p> : null}
         {removeMember.error ? <p className="error">{removeMember.error.message}</p> : null}
         <div className="stack stack--tight">
@@ -51,36 +55,43 @@ export default function MembersSettingsPage() {
           {!members.isPending && (members.data?.data.members ?? []).length === 0 ? (
             <p className="muted">No members found for this workspace yet.</p>
           ) : null}
-          {(members.data?.data.members ?? []).map((member) => (
-            <div className="list-row" key={String(member.id)}>
-              <div>
-                <strong>{String(member.name)}</strong>
-                <p className="muted">
-                  {String(member.email)}
-                  {member.user_id === currentUserId ? " · You" : ""}
-                </p>
+          {(members.data?.data.members ?? []).map((member) => {
+            const canManageThisMember = canManageMembers && (canManageOwnership || member.role !== "owner");
+            return (
+              <div className="list-row" key={String(member.id)}>
+                <div>
+                  <strong>{String(member.name)}</strong>
+                  <p className="muted">
+                    {String(member.email)}
+                    {member.user_id === currentUserId ? " (You)" : ""}
+                  </p>
+                </div>
+                <div className="list-row__actions">
+                  {canManageThisMember ? (
+                    <select
+                      className="input input--compact"
+                      disabled={updateRole.isPending || removeMember.isPending}
+                      onChange={(event) => void handleRoleChange(member.id, event)}
+                      value={member.role}
+                    >
+                      {canManageOwnership ? <option value="owner">Owner</option> : null}
+                      <option value="admin">Admin</option>
+                      <option value="member">Member</option>
+                    </select>
+                  ) : (
+                    <strong>{member.role}</strong>
+                  )}
+                  <Button
+                    disabled={!canManageThisMember || updateRole.isPending || removeMember.isPending}
+                    onClick={() => void handleRemove(member.id, member.name)}
+                    type="button"
+                  >
+                    {member.user_id === currentUserId ? "Leave" : "Remove"}
+                  </Button>
+                </div>
               </div>
-              <div className="list-row__actions">
-                <select
-                  className="input input--compact"
-                  disabled={!canManageMembers || updateRole.isPending || removeMember.isPending}
-                  onChange={(event) => void handleRoleChange(member.id, event)}
-                  value={member.role}
-                >
-                  <option value="owner">Owner</option>
-                  <option value="admin">Admin</option>
-                  <option value="member">Member</option>
-                </select>
-                <Button
-                  disabled={!canManageMembers || updateRole.isPending || removeMember.isPending}
-                  onClick={() => void handleRemove(member.id, member.name)}
-                  type="button"
-                >
-                  {member.user_id === currentUserId ? "Leave" : "Remove"}
-                </Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </Card>
       <InvitePanel workspaceId={workspaceId} />
