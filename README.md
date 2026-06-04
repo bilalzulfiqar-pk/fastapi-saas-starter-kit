@@ -27,6 +27,26 @@ docs/      Architecture, API, security, deployment, and starter conversion notes
 2. Run `docker compose up --build`.
 3. Open `http://localhost:3000`.
 
+## Verification
+
+Run the core checks before publishing or customizing the starter:
+
+- `python -m pytest apps/api/tests`
+- `corepack pnpm --dir apps/web lint`
+- `corepack pnpm --dir apps/web typecheck`
+- `corepack pnpm --dir apps/web test`
+- `corepack pnpm --dir apps/web build`
+- `docker compose up --build`
+
+Recommended smoke flow:
+
+1. Register a new account.
+2. Create the first workspace in onboarding.
+3. Open the dashboard and each settings page.
+4. Send an invite from the members/settings flow.
+5. Register or log in as the invited user and accept the invite.
+6. Confirm the invited user appears in workspace members.
+
 ## Key implementation notes
 
 - The frontend uses `Next.js 16` and `proxy.ts`.
@@ -41,4 +61,3 @@ docs/      Architecture, API, security, deployment, and starter conversion notes
 - [Security](docs/security.md)
 - [Deployment](docs/deployment.md)
 - [Starter kit guide](docs/starter-kit/00-start-here.md)
-

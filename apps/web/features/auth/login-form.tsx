@@ -31,11 +31,24 @@ export function LoginForm({ inviteToken, nextUrl }: { inviteToken?: string | nul
       <form className="stack" onSubmit={handleSubmit}>
         <label>
           Email
-          <Input onChange={(event) => setEmail(event.target.value)} type="email" value={email} />
+          <Input
+            autoComplete="email"
+            onChange={(event) => setEmail(event.target.value)}
+            required
+            type="email"
+            value={email}
+          />
         </label>
         <label>
           Password
-          <Input onChange={(event) => setPassword(event.target.value)} type="password" value={password} />
+          <Input
+            autoComplete="current-password"
+            minLength={8}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+            type="password"
+            value={password}
+          />
         </label>
         {login.error ? <p className="error">{login.error.message}</p> : null}
         <Button disabled={login.isPending} type="submit">

@@ -7,9 +7,19 @@ from fastapi.testclient import TestClient
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
 
+import app.core.rate_limit as rate_limit
 from app.db.session import get_session
 from app.main import app
 from app.modules.billing.models import Plan
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiters() -> Generator[None, None, None]:
+    rate_limit._memory_backend._store.clear()
+    rate_limit._redis_backend = None
+    yield
+    rate_limit._memory_backend._store.clear()
+    rate_limit._redis_backend = None
 
 
 @pytest.fixture

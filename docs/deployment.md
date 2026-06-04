@@ -16,3 +16,15 @@
 - Use HTTPS for both frontend and backend
 - Replace `ConsoleEmailProvider` with a real provider before enabling password reset or verification flows
 
+## Local release check
+
+Before pushing a public starter update, run the local verification set:
+
+- `python -m pytest apps/api/tests`
+- `corepack pnpm --dir apps/web lint`
+- `corepack pnpm --dir apps/web typecheck`
+- `corepack pnpm --dir apps/web test`
+- `corepack pnpm --dir apps/web build`
+- `docker compose up --build`
+
+Smoke-check the starter by registering a user, creating a first workspace, opening the settings pages, inviting a teammate, and accepting that invite from a second account.

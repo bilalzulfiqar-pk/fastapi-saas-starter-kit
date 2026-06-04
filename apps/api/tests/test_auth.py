@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
+from sqlmodel import Session, select
 
 from app.core.config import get_settings
+from app.core.security import hash_secret
+from app.modules.auth.models import RefreshToken
 
 from .conftest import auth_headers
 
@@ -50,6 +53,107 @@ def test_register_sets_session_marker_cookie(client: TestClient):
 
     assert response.status_code == 200
     assert response.cookies.get(get_settings().session_cookie_name) == "1"
+
+
+def test_duplicate_registration_returns_conflict(client: TestClient):
+    first = register_user(client, email="duplicate@example.com")
+    assert first.status_code == 200
+
+    second = register_user(client, email="duplicate@example.com")
+
+    assert second.status_code == 409
+    assert second.json()["error"]["code"] == "email_already_registered"
+
+
+def test_login_rate_limit_returns_429(client: TestClient):
+    register_user(client, email="limited@example.com")
+
+    for _ in range(5):
+        failed_login = login_user(client, email="limited@example.com", password="wrong-password")
+        assert failed_login.status_code == 401
+        assert failed_login.json()["error"]["code"] == "invalid_credentials"
+
+    blocked_login = login_user(client, email="limited@example.com", password="wrong-password")
+
+    assert blocked_login.status_code == 429
+    assert blocked_login.json()["error"]["code"] == "rate_limited"
+
+
+def test_refresh_rotation_rejects_replay_of_old_token(client: TestClient):
+    settings = get_settings()
+    register_user(client, email="rotate@example.com")
+    original_refresh_token = client.cookies.get(settings.refresh_cookie_name)
+    assert original_refresh_token is not None
+
+    refreshed = client.post("/api/v1/auth/refresh", headers=auth_headers())
+    assert refreshed.status_code == 200
+
+    rotated_refresh_token = client.cookies.get(settings.refresh_cookie_name)
+    assert rotated_refresh_token is not None
+    assert rotated_refresh_token != original_refresh_token
+
+    client.cookies.set(
+        settings.refresh_cookie_name,
+        original_refresh_token,
+        domain="testserver.local",
+        path="/api/v1/auth",
+    )
+    replay = client.post("/api/v1/auth/refresh", headers=auth_headers())
+
+    assert replay.status_code == 401
+    assert replay.json()["error"]["code"] == "invalid_refresh_token"
+
+
+def test_logout_revokes_refresh_token_and_old_password_stops_working(client: TestClient, session: Session):
+    settings = get_settings()
+    register_user(client, email="password@example.com")
+    refresh_token = client.cookies.get(settings.refresh_cookie_name)
+    assert refresh_token is not None
+
+    change_password = client.post(
+        "/api/v1/users/me/change-password",
+        headers=auth_headers(),
+        json={"current_password": "supersecret", "new_password": "newersecret"},
+    )
+    assert change_password.status_code == 200
+
+    logout = client.post("/api/v1/auth/logout", headers=auth_headers())
+    assert logout.status_code == 200
+
+    refresh_row = session.exec(select(RefreshToken).where(RefreshToken.token_hash == hash_secret(refresh_token))).first()
+    assert refresh_row is not None
+    assert refresh_row.revoked_at is not None
+
+    replay_client = client
+    replay_client.cookies.set(
+        settings.refresh_cookie_name,
+        refresh_token,
+        domain="testserver.local",
+        path="/api/v1/auth",
+    )
+    replay_response = replay_client.post("/api/v1/auth/refresh", headers=auth_headers())
+    assert replay_response.status_code == 401
+    assert replay_response.json()["error"]["code"] == "invalid_refresh_token"
+
+    old_login = login_user(client, email="password@example.com", password="supersecret")
+    assert old_login.status_code == 401
+    assert old_login.json()["error"]["code"] == "invalid_credentials"
+
+    new_login = login_user(client, email="password@example.com", password="newersecret")
+    assert new_login.status_code == 200
+
+
+def test_change_password_rejects_password_reuse(client: TestClient):
+    register_user(client, email="reuse@example.com")
+
+    response = client.post(
+        "/api/v1/users/me/change-password",
+        headers=auth_headers(),
+        json={"current_password": "supersecret", "new_password": "supersecret"},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["error"]["code"] == "password_reuse"
 
 
 def test_invalid_refresh_clears_auth_cookies(client: TestClient):

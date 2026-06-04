@@ -32,15 +32,28 @@ export function RegisterForm({ inviteToken, nextUrl }: { inviteToken?: string | 
       <form className="stack" onSubmit={handleSubmit}>
         <label>
           Name
-          <Input onChange={(event) => setName(event.target.value)} value={name} />
+          <Input autoComplete="name" onChange={(event) => setName(event.target.value)} required value={name} />
         </label>
         <label>
           Email
-          <Input onChange={(event) => setEmail(event.target.value)} type="email" value={email} />
+          <Input
+            autoComplete="email"
+            onChange={(event) => setEmail(event.target.value)}
+            required
+            type="email"
+            value={email}
+          />
         </label>
         <label>
           Password
-          <Input onChange={(event) => setPassword(event.target.value)} type="password" value={password} />
+          <Input
+            autoComplete="new-password"
+            minLength={8}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+            type="password"
+            value={password}
+          />
         </label>
         {register.error ? <p className="error">{register.error.message}</p> : null}
         <Button disabled={register.isPending} type="submit">
