@@ -63,6 +63,40 @@ def test_invite_revocation_updates_status(client: TestClient):
     assert invites.json()["data"]["invites"][0]["status"] == "revoked"
 
 
+def test_accepted_invites_cannot_be_revoked(client: TestClient):
+    register_user(client, email="accepted-owner@example.com", name="Owner")
+    workspace = create_workspace(client, name="Accepted Invite")
+    workspace_id = workspace.json()["data"]["workspace"]["id"]
+
+    invite_response = client.post(
+        f"/api/v1/workspaces/{workspace_id}/invites",
+        headers=auth_headers(),
+        json={"email": "accepted-member@example.com", "role": "member"},
+    )
+    assert invite_response.status_code == 200
+    invite = invite_response.json()["data"]["invite"]
+    invite_id = invite["id"]
+    token = invite["invite_url"].split("invite=")[1]
+
+    logout_owner = client.post("/api/v1/auth/logout", headers=auth_headers())
+    assert logout_owner.status_code == 200
+
+    register_user(client, email="accepted-member@example.com", name="Member")
+
+    accept = client.post(f"/api/v1/invites/{token}/accept", headers=auth_headers())
+    assert accept.status_code == 200
+
+    logout_member = client.post("/api/v1/auth/logout", headers=auth_headers())
+    assert logout_member.status_code == 200
+
+    login_owner = login_user(client, email="accepted-owner@example.com")
+    assert login_owner.status_code == 200
+
+    revoke = client.delete(f"/api/v1/workspaces/{workspace_id}/invites/{invite_id}", headers=auth_headers())
+    assert revoke.status_code == 409
+    assert revoke.json()["error"]["code"] == "invite_not_pending"
+
+
 def test_admin_cannot_create_or_revoke_owner_invites(client: TestClient, session: Session):
     register_user(client, email="invite-phase4-owner@example.com", name="Owner")
     workspace = create_workspace(client, name="Owner Invite Rules")

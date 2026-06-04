@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,15 +18,20 @@ export function InvitePanel({ workspaceId }: { workspaceId: string | null }) {
   const activeWorkspace = workspaces.data?.data.workspaces.find((workspace) => workspace.id === workspaceId);
   const canManageInvites = activeWorkspace?.role === "owner" || activeWorkspace?.role === "admin";
   const canInviteOwners = activeWorkspace?.role === "owner";
+  const selectedRole = !canInviteOwners && role === "owner" ? "member" : role;
+  const resetCreateInvite = createInvite.reset;
+  const resetCancelInvite = cancelInvite.reset;
+
+  useEffect(() => {
+    resetCreateInvite();
+    resetCancelInvite();
+  }, [workspaceId, resetCancelInvite, resetCreateInvite]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!workspaceId) return;
-    await createInvite.mutateAsync({ email, role });
+    await createInvite.mutateAsync({ email, role: selectedRole });
     setEmail("");
-    if (!canInviteOwners) {
-      setRole("member");
-    }
   }
 
   async function handleRevoke(invite: InviteRecord) {
@@ -52,7 +57,7 @@ export function InvitePanel({ workspaceId }: { workspaceId: string | null }) {
           className="input"
           disabled={!workspaceId || !canManageInvites || createInvite.isPending || cancelInvite.isPending}
           onChange={(event) => setRole(event.target.value as WorkspaceRole)}
-          value={role}
+          value={selectedRole}
         >
           <option value="member">Member</option>
           <option value="admin">Admin</option>

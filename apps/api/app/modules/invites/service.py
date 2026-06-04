@@ -114,6 +114,8 @@ def cancel_invite(session: Session, workspace_id: UUID, invite_id: UUID, actor: 
     invite = session.get(WorkspaceInvite, invite_id)
     if not invite or invite.workspace_id != workspace_id:
         raise AppError(code="invite_not_found", message="Invite not found", status_code=404)
+    if invite.status != "pending":
+        raise AppError(code="invite_not_pending", message="Only pending invites can be revoked", status_code=409)
     _ensure_owner_invite_management_allowed(actor_member.role, invite.role)
     invite.status = "revoked"
     invite.updated_at = utcnow()
