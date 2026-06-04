@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 
-import { apiFetch } from "@/lib/api-client";
+import { ApiError, apiFetch } from "@/lib/api-client";
 
 type AuthUser = {
   id: string;
@@ -18,6 +18,7 @@ export function useCurrentUser() {
   return useQuery({
     queryKey: ["current-user"],
     queryFn: () => apiFetch<MeResponse>("/api/v1/auth/me"),
+    retry: (failureCount, error) => !(error instanceof ApiError && error.status === 401) && failureCount < 1,
   });
 }
 
@@ -40,4 +41,3 @@ export function useRegister() {
       }),
   });
 }
-
