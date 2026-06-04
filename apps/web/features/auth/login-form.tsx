@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useLogin } from "@/hooks/use-current-user";
 
-export function LoginForm() {
+export function LoginForm({ inviteToken, nextUrl }: { inviteToken?: string | null; nextUrl?: string | null }) {
   const router = useRouter();
-  const params = useSearchParams();
-  const invite = params.get("invite");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const login = useLogin();
@@ -20,7 +18,7 @@ export function LoginForm() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     await login.mutateAsync({ email, password });
-    const destination = invite ? `/dashboard?invite=${invite}` : "/dashboard";
+    const destination = nextUrl || (inviteToken ? `/dashboard?invite=${inviteToken}` : "/dashboard");
     router.push(destination);
     router.refresh();
   }
@@ -44,9 +42,8 @@ export function LoginForm() {
         </Button>
       </form>
       <p className="muted">
-        Need an account? <Link href={invite ? `/register?invite=${invite}` : "/register"}>Create one</Link>
+        Need an account? <Link href={inviteToken ? `/register?invite=${inviteToken}` : "/register"}>Create one</Link>
       </p>
     </Card>
   );
 }
-

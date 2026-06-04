@@ -1,30 +1,51 @@
+# OS files
 .DS_Store
 Thumbs.db
+
+# Environment files
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+!.env.*.example
 .python-version
+
+# Python
 .venv/
 __pycache__/
-*.pyc
+*.py[cod]
 *.egg-info/
 .pytest_cache/
 pytest-cache-files-*/
 .mypy_cache/
 .ruff_cache/
 .coverage
+.coverage.*
 htmlcov/
-dist/
-build/
+
+# JavaScript / Next.js
 node_modules/
+.pnpm-store/
 .corepack/
 .next/
 coverage/
+dist/
+build/
 *.tsbuildinfo
+.eslintcache
+.vite/
+.vercel/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Local databases and temp files
+*.sqlite3
+*.db
 _tmp_*
+
+# Editor files
 .idea/
 .vscode/
-apps/api/.venv/
-apps/api/.pytest_cache/
-apps/web/.next/
+
+# Project-local notes
 _dev-notes/

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useRegister } from "@/hooks/use-current-user";
 
-export function RegisterForm() {
+export function RegisterForm({ inviteToken }: { inviteToken?: string | null }) {
   const router = useRouter();
-  const params = useSearchParams();
-  const invite = params.get("invite");
   const register = useRegister();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -21,7 +19,7 @@ export function RegisterForm() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     await register.mutateAsync({ name, email, password });
-    const destination = invite ? `/dashboard?invite=${invite}` : "/onboarding";
+    const destination = inviteToken ? `/dashboard?invite=${inviteToken}` : "/onboarding";
     router.push(destination);
     router.refresh();
   }
@@ -49,9 +47,8 @@ export function RegisterForm() {
         </Button>
       </form>
       <p className="muted">
-        Already have an account? <Link href={invite ? `/login?invite=${invite}` : "/login"}>Sign in</Link>
+        Already have an account? <Link href={inviteToken ? `/login?invite=${inviteToken}` : "/login"}>Sign in</Link>
       </p>
     </Card>
   );
 }
-
