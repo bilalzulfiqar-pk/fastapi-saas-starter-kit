@@ -57,14 +57,16 @@ services:
     depends_on:
       - api
     volumes:
-      - .:/workspace
-      - /workspace/node_modules
-      - /workspace/apps/web/node_modules
+      - ./apps/web:/workspace/apps/web
+      - ./package.json:/workspace/package.json:ro
+      - ./pnpm-workspace.yaml:/workspace/pnpm-workspace.yaml:ro
+      - ./pnpm-lock.yaml:/workspace/pnpm-lock.yaml:ro
+      - web_node_modules:/workspace/node_modules
+      - web_app_node_modules:/workspace/apps/web/node_modules
     working_dir: /workspace/apps/web
-    command: >
-      sh -c "corepack enable &&
-      CI=true pnpm install --force --frozen-lockfile=false &&
-      pnpm dev --hostname 0.0.0.0 --port 3000"
+    command: /usr/local/bin/web-dev-entrypoint
 
 volumes:
   postgres_data:
+  web_node_modules:
+  web_app_node_modules:

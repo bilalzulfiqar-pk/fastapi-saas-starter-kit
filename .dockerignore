@@ -4,6 +4,7 @@
 .env.local
 .env.*.local
 .corepack
+.pnpm-store
 _dev-notes
 _tmp_*
 node_modules
