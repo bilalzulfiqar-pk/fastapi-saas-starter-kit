@@ -21,7 +21,7 @@ export function InviteAcceptBanner({ token }: { token: string | null }) {
     return null;
   }
 
-  const inviteData = invite.data.data.invite as { email: string; role: string };
+  const inviteData = invite.data.data.invite;
 
   return (
     <Card className="banner">
@@ -30,6 +30,7 @@ export function InviteAcceptBanner({ token }: { token: string | null }) {
         <p className="muted">
           You were invited as {inviteData.role} for {inviteData.email}.
         </p>
+        {accept.error ? <p className="error">{accept.error.message}</p> : null}
       </div>
       <Button
         onClick={async () => {
@@ -37,11 +38,11 @@ export function InviteAcceptBanner({ token }: { token: string | null }) {
           router.replace("/dashboard");
           router.refresh();
         }}
+        disabled={accept.isPending}
         type="button"
       >
-        Accept invite
+        {accept.isPending ? "Accepting..." : "Accept invite"}
       </Button>
     </Card>
   );
 }
-

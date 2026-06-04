@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useLogin } from "@/hooks/use-current-user";
+import { buildAuthHref, getPostAuthDestination } from "@/lib/auth-navigation";
 
 export function LoginForm({ inviteToken, nextUrl }: { inviteToken?: string | null; nextUrl?: string | null }) {
   const router = useRouter();
@@ -18,7 +19,7 @@ export function LoginForm({ inviteToken, nextUrl }: { inviteToken?: string | nul
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     await login.mutateAsync({ email, password });
-    const destination = nextUrl || (inviteToken ? `/dashboard?invite=${inviteToken}` : "/dashboard");
+    const destination = getPostAuthDestination({ inviteToken, nextUrl, defaultPath: "/dashboard" });
     router.push(destination);
     router.refresh();
   }
@@ -42,7 +43,7 @@ export function LoginForm({ inviteToken, nextUrl }: { inviteToken?: string | nul
         </Button>
       </form>
       <p className="muted">
-        Need an account? <Link href={inviteToken ? `/register?invite=${inviteToken}` : "/register"}>Create one</Link>
+        Need an account? <Link href={buildAuthHref("/register", { inviteToken, nextUrl })}>Create one</Link>
       </p>
     </Card>
   );

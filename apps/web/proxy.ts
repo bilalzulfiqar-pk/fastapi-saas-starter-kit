@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { normalizeNextPath } from "@/lib/auth-navigation";
 import { ACCESS_COOKIE_NAME, SESSION_COOKIE_NAME } from "@/lib/constants";
 
 const protectedPrefixes = ["/dashboard", "/onboarding"];
@@ -21,9 +22,11 @@ export function proxy(request: NextRequest) {
     if (inviteToken) {
       return NextResponse.redirect(new URL(`/dashboard?invite=${encodeURIComponent(inviteToken)}`, request.url));
     }
-    if (!searchParams.has("next")) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+    const nextPath = normalizeNextPath(searchParams.get("next"));
+    if (nextPath) {
+      return NextResponse.redirect(new URL(nextPath, request.url));
     }
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return NextResponse.next();

@@ -29,8 +29,18 @@ def _invite_url(raw_token: str) -> str:
     return f"{get_settings().app_url}/login?invite={raw_token}"
 
 
+def _ensure_owner_invite_management_allowed(actor_role: str, invite_role: str) -> None:
+    if invite_role == "owner" and actor_role != "owner":
+        raise AppError(
+            code="owner_role_forbidden",
+            message="Only workspace owners can grant, revoke, or invite owner roles",
+            status_code=403,
+        )
+
+
 async def create_invite(session: Session, workspace_id: UUID, actor: User, payload: InviteCreateInput) -> tuple[WorkspaceInvite, str]:
-    workspace, _ = require_workspace_admin(session, workspace_id, actor.id)
+    workspace, actor_member = require_workspace_admin(session, workspace_id, actor.id)
+    _ensure_owner_invite_management_allowed(actor_member.role, payload.role)
     email = _normalize_email(payload.email)
 
     existing_pending = session.exec(
@@ -100,10 +110,11 @@ def get_invite_by_token(session: Session, raw_token: str) -> WorkspaceInvite:
 
 
 def cancel_invite(session: Session, workspace_id: UUID, invite_id: UUID, actor: User) -> None:
-    require_workspace_admin(session, workspace_id, actor.id)
+    _, actor_member = require_workspace_admin(session, workspace_id, actor.id)
     invite = session.get(WorkspaceInvite, invite_id)
     if not invite or invite.workspace_id != workspace_id:
         raise AppError(code="invite_not_found", message="Invite not found", status_code=404)
+    _ensure_owner_invite_management_allowed(actor_member.role, invite.role)
     invite.status = "revoked"
     invite.updated_at = utcnow()
     session.add(invite)

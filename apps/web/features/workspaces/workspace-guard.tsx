@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, type ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Card } from "@/components/ui/card";
 import { useActiveWorkspace } from "@/hooks/use-active-workspace";
@@ -10,10 +10,12 @@ import { useWorkspaces } from "@/hooks/use-workspaces";
 export function WorkspaceGuard({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { workspaceId, syncWithWorkspaces } = useActiveWorkspace();
   const workspaces = useWorkspaces();
   const items = useMemo(() => workspaces.data?.data.workspaces ?? [], [workspaces.data]);
   const isOnboardingRoute = pathname === "/onboarding";
+  const isInviteAcceptanceRoute = pathname === "/dashboard" && Boolean(searchParams.get("invite"));
   const hasWorkspaces = items.length > 0;
   const hasActiveWorkspace = workspaceId ? items.some((workspace) => workspace.id === workspaceId) : false;
 
@@ -29,7 +31,7 @@ export function WorkspaceGuard({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (!hasWorkspaces && !isOnboardingRoute) {
+    if (!hasWorkspaces && !isOnboardingRoute && !isInviteAcceptanceRoute) {
       router.replace("/onboarding");
       return;
     }
@@ -37,7 +39,7 @@ export function WorkspaceGuard({ children }: { children: ReactNode }) {
     if (hasWorkspaces && isOnboardingRoute) {
       router.replace("/dashboard");
     }
-  }, [hasWorkspaces, isOnboardingRoute, router, workspaces.data]);
+  }, [hasWorkspaces, isInviteAcceptanceRoute, isOnboardingRoute, router, workspaces.data]);
 
   if (workspaces.isPending) {
     return (
@@ -57,7 +59,7 @@ export function WorkspaceGuard({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!hasWorkspaces && !isOnboardingRoute) {
+  if (!hasWorkspaces && !isOnboardingRoute && !isInviteAcceptanceRoute) {
     return (
       <Card>
         <h1>Redirecting to onboarding</h1>
