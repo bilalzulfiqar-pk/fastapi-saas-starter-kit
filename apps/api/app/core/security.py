@@ -98,12 +98,20 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
         path="/api/v1/auth",
         **common_kwargs,
     )
+    response.set_cookie(
+        key=settings.session_cookie_name,
+        value="1",
+        max_age=settings.refresh_token_expire_days * 24 * 60 * 60,
+        path="/",
+        **common_kwargs,
+    )
 
 
 def clear_auth_cookies(response: Response) -> None:
     settings = get_settings()
     response.delete_cookie(settings.access_cookie_name, path="/", domain=settings.cookie_domain or None)
     response.delete_cookie(settings.refresh_cookie_name, path="/api/v1/auth", domain=settings.cookie_domain or None)
+    response.delete_cookie(settings.session_cookie_name, path="/", domain=settings.cookie_domain or None)
 
 
 def get_access_cookie(request: Request) -> str:

@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     cookie_samesite: str = "lax"
     access_cookie_name: str = "saas_access_token"
     refresh_cookie_name: str = "saas_refresh_token"
+    session_cookie_name: str = "saas_session"
     frontend_origins: str = Field(default="http://localhost:3000,http://web:3000")
     redis_url: str = "redis://redis:6379/0"
     log_level: str = "INFO"
