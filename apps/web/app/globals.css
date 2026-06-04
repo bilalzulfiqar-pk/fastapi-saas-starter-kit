@@ -109,6 +109,12 @@ select {
   margin-top: 0.35rem;
 }
 
+.input--compact {
+  width: auto;
+  min-width: 8.5rem;
+  margin-top: 0;
+}
+
 .muted {
   color: var(--muted);
 }
@@ -143,6 +149,13 @@ select {
   gap: 1rem;
   border-top: 1px solid var(--border);
   padding-top: 0.75rem;
+}
+
+.list-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .app-shell {
@@ -233,4 +246,3 @@ select {
     display: none;
   }
 }
-

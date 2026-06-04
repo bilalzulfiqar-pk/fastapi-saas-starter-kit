@@ -1,18 +1,14 @@
 "use client";
 
-import { ChangeEvent, useEffect, useMemo } from "react";
+import { ChangeEvent, useMemo } from "react";
 
 import { useActiveWorkspace } from "@/hooks/use-active-workspace";
 import { useWorkspaces } from "@/hooks/use-workspaces";
 
 export function WorkspaceSwitcher() {
-  const { workspaceId, setWorkspaceId, syncWithWorkspaces } = useActiveWorkspace();
+  const { workspaceId, setWorkspaceId } = useActiveWorkspace();
   const workspaces = useWorkspaces();
   const items = useMemo(() => workspaces.data?.data.workspaces ?? [], [workspaces.data]);
-
-  useEffect(() => {
-    syncWithWorkspaces(items);
-  }, [items, syncWithWorkspaces]);
 
   if (items.length === 0) {
     return <p className="muted">No workspace yet</p>;

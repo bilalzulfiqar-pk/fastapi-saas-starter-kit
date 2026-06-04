@@ -1,17 +1,14 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FormEvent, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useActiveWorkspace } from "@/hooks/use-active-workspace";
-import { useWorkspaces } from "@/hooks/use-workspaces";
-import { apiFetch } from "@/lib/api-client";
+import { useUpdateWorkspace, useWorkspaces } from "@/hooks/use-workspaces";
 
 export default function WorkspaceSettingsPage() {
-  const queryClient = useQueryClient();
   const { workspaceId } = useActiveWorkspace();
   const workspaces = useWorkspaces();
   const workspace = useMemo(
@@ -20,21 +17,11 @@ export default function WorkspaceSettingsPage() {
   );
   const [name, setName] = useState<string | null>(null);
   const draftName = name ?? workspace?.name ?? "";
-
-  const mutation = useMutation({
-    mutationFn: () =>
-      apiFetch(`/api/v1/workspaces/${workspaceId}`, {
-        method: "PATCH",
-        bodyJson: { name: draftName },
-      }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["workspaces"] });
-    },
-  });
+  const mutation = useUpdateWorkspace(workspaceId);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    await mutation.mutateAsync();
+    await mutation.mutateAsync({ name: draftName });
   }
 
   return (

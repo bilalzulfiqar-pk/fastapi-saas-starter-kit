@@ -17,4 +17,21 @@ describe("useActiveWorkspace", () => {
     });
     expect(result.current.workspaceId).toBe("workspace-1");
   });
+
+  it("syncs to the first valid workspace when the stored selection is missing", () => {
+    const { result } = renderHook(() => useActiveWorkspace(), { wrapper });
+
+    act(() => {
+      result.current.setWorkspaceId("missing-workspace");
+    });
+
+    act(() => {
+      result.current.syncWithWorkspaces([
+        { id: "workspace-2", name: "Acme", slug: "acme", role: "owner" },
+        { id: "workspace-3", name: "Beta", slug: "beta", role: "member" },
+      ]);
+    });
+
+    expect(result.current.workspaceId).toBe("workspace-2");
+  });
 });

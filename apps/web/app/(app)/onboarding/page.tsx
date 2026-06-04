@@ -1,6 +1,5 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -13,7 +12,6 @@ import { useCreateWorkspace } from "@/hooks/use-workspaces";
 export default function OnboardingPage() {
   const [name, setName] = useState("");
   const router = useRouter();
-  const queryClient = useQueryClient();
   const createWorkspace = useCreateWorkspace();
   const { setWorkspaceId } = useActiveWorkspace();
 
@@ -21,7 +19,6 @@ export default function OnboardingPage() {
     event.preventDefault();
     const response = (await createWorkspace.mutateAsync({ name })) as { data: { workspace: { id: string } } };
     setWorkspaceId(response.data.workspace.id);
-    await queryClient.invalidateQueries({ queryKey: ["workspaces"] });
     router.push("/dashboard");
     router.refresh();
   }
@@ -43,4 +40,3 @@ export default function OnboardingPage() {
     </Card>
   );
 }
-
