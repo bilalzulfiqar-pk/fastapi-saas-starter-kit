@@ -28,3 +28,5 @@ Before pushing a public starter update, run the local verification set:
 - `docker compose up --build`
 
 Smoke-check the starter by registering a user, creating a first workspace, opening the settings pages, inviting a teammate, and accepting that invite from a second account.
+
+If you also want to verify the Redis-backed rate limiter path, run `python scripts/verify_redis_rate_limit.py` against the live Docker stack.

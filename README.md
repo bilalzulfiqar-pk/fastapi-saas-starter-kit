@@ -37,6 +37,7 @@ Run the core checks before publishing or customizing the starter:
 - `corepack pnpm --dir apps/web test`
 - `corepack pnpm --dir apps/web build`
 - `docker compose up --build`
+- `python scripts/verify_redis_rate_limit.py` (optional Redis-path runtime check)
 
 Recommended smoke flow:
 
