@@ -5,7 +5,7 @@
 - Frontend: Vercel or Docker
 - Backend: Render, Railway, Fly.io, or Docker on a VPS
 - Database: managed PostgreSQL
-- Redis: managed Redis or local container in small environments
+- Redis: managed Redis or a container for smaller self-hosted environments
 
 ## Local Docker workflow
 
@@ -15,6 +15,12 @@
    - `http://localhost:3000`
    - `http://localhost:8000/health`
    - `http://localhost:8000/readiness`
+
+To stop the local stack:
+
+```bash
+docker compose down
+```
 
 ## Production checklist
 
@@ -29,15 +35,26 @@
 
 ## Local release check
 
-Before pushing a public starter update, run the local verification set:
+Before publishing or tagging a public starter update, run:
 
-- `python -m pytest apps/api/tests`
-- `corepack pnpm --dir apps/web lint`
-- `corepack pnpm --dir apps/web typecheck`
-- `corepack pnpm --dir apps/web test`
-- `corepack pnpm --dir apps/web build`
+- `pnpm test:api`
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test:web`
+- `pnpm --dir apps/web build`
 - `docker compose up --build`
 
-Smoke-check the starter by registering a user, creating a first workspace, opening the settings pages, inviting a teammate, and accepting that invite from a second account.
+Then smoke-check the starter by:
 
-If you also want to verify the Redis-backed rate limiter path, run `python scripts/verify_redis_rate_limit.py` against the live Docker stack.
+1. registering a user
+2. creating a first workspace
+3. opening the dashboard and settings pages
+4. inviting a teammate
+5. accepting that invite from a second account
+6. confirming the invited member appears in the workspace
+
+If you also want to verify the Redis-backed rate limiter path, run:
+
+```bash
+python scripts/verify_redis_rate_limit.py
+```

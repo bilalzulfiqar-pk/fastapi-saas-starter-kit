@@ -55,9 +55,16 @@ Errors return:
 
 - `POST /api/v1/workspaces`
 - `GET /api/v1/workspaces`
-- `GET/PATCH /api/v1/workspaces/{workspace_id}`
+- `GET /api/v1/workspaces/{workspace_id}`
+- `PATCH /api/v1/workspaces/{workspace_id}`
 - `GET /api/v1/workspaces/{workspace_id}/members`
-- `PATCH/DELETE /api/v1/workspaces/{workspace_id}/members/{member_id}`
+- `PATCH /api/v1/workspaces/{workspace_id}/members/{member_id}`
+- `DELETE /api/v1/workspaces/{workspace_id}/members/{member_id}`
+
+`DELETE /members/{member_id}` is used for both:
+
+- removing another member when the actor has permission
+- leaving a workspace when the actor is removing their own membership
 
 ## Invite routes
 
@@ -66,6 +73,8 @@ Errors return:
 - `DELETE /api/v1/workspaces/{workspace_id}/invites/{invite_id}`
 - `GET /api/v1/invites/{token}`
 - `POST /api/v1/invites/{token}/accept`
+
+Invite creation returns an `invite_url` in the response payload so the starter can work without a real email provider in v1.
 
 ## Billing routes
 
@@ -77,4 +86,5 @@ Errors return:
 - This starter uses cookie-first auth for the web app
 - Unsafe browser methods require a trusted `Origin` header
 - Login and registration remain public, but they still require a trusted `Origin`
+- No bearer-token flow is documented for the dashboard because the MVP is intentionally browser-cookie-first
 - Rate limiting applies to sensitive routes such as login, register, refresh, and invite acceptance

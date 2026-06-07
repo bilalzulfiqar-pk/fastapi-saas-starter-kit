@@ -9,6 +9,12 @@
 - Refresh tokens are rotated on successful refresh and revoked on logout
 - Passwords are hashed with Argon2id
 
+Cookie names are configurable through environment variables:
+
+- `ACCESS_COOKIE_NAME`
+- `REFRESH_COOKIE_NAME`
+- `SESSION_COOKIE_NAME`
+
 ## CSRF and origin validation
 
 This starter uses cookie-first auth, so unsafe browser requests must be origin-checked.
@@ -33,6 +39,7 @@ That keeps cookies host-only on localhost and avoids brittle local domain handli
 
 - Never log passwords, raw refresh tokens, API secrets, or cookies
 - The console email provider logs email content for development only
+- Replace `ConsoleEmailProvider` before adding production password-reset or verification flows
 
 ## Rate limiting
 
