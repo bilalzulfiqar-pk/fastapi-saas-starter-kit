@@ -91,7 +91,7 @@ Short version:
 1. Clone the repository:
 
 ```bash
-git clone <your-fork-or-repo-url>
+git clone https://github.com/bilalzulfiqar-pk/fastapi-saas-starter-kit.git
 cd fastapi-saas-starter-kit
 ```
 
