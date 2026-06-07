@@ -68,6 +68,36 @@ def test_owner_can_update_member_role_and_remove_member(client: TestClient, sess
     assert len(members.json()["data"]["members"]) == 1
 
 
+def test_member_can_leave_own_workspace(client: TestClient, session: Session):
+    register_user(client, email="workspace-owner@example.com")
+    workspace = create_workspace(client, name="Leave Workspace")
+    workspace_id = UUID(workspace.json()["data"]["workspace"]["id"])
+
+    teammate = User(email="self-leave@example.com", name="Self Leave", password_hash=hash_password("supersecret"))
+    session.add(teammate)
+    session.commit()
+    session.refresh(teammate)
+
+    membership = WorkspaceMember(workspace_id=workspace_id, user_id=teammate.id, role="member")
+    session.add(membership)
+    session.commit()
+    session.refresh(membership)
+
+    logout = client.post("/api/v1/auth/logout", headers=auth_headers())
+    assert logout.status_code == 200
+
+    login = login_user(client, email="self-leave@example.com")
+    assert login.status_code == 200
+
+    leave = client.delete(f"/api/v1/workspaces/{workspace_id}/members/{membership.id}", headers=auth_headers())
+    assert leave.status_code == 200
+    assert leave.json()["message"] == "Left workspace"
+
+    workspaces = client.get("/api/v1/workspaces")
+    assert workspaces.status_code == 200
+    assert workspaces.json()["data"]["workspaces"] == []
+
+
 def test_last_owner_cannot_be_demoted_or_removed(client: TestClient):
     register_user(client)
     workspace = create_workspace(client)

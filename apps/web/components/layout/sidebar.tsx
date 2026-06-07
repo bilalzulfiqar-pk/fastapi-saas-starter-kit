@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 
 import { WorkspaceSwitcher } from "@/features/workspaces/workspace-switcher";
 import { cn } from "@/lib/utils";
-import { useSidebarState } from "@/providers/sidebar-provider";
 
 const links = [
   { href: "/dashboard", label: "Overview" },
@@ -18,10 +17,9 @@ const links = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { open } = useSidebarState();
 
   return (
-    <aside className={cn("sidebar", !open && "sidebar--collapsed")}>
+    <aside className="sidebar">
       <div className="sidebar__brand">FastAPI SaaS Starter</div>
       <WorkspaceSwitcher />
       <nav className="sidebar__nav">
@@ -34,4 +32,3 @@ export function Sidebar() {
     </aside>
   );
 }
-

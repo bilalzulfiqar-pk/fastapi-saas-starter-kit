@@ -25,13 +25,15 @@ export default function MembersSettingsPage() {
   const canManageMembers = activeWorkspace?.role === "owner" || activeWorkspace?.role === "admin";
   const canManageOwnership = activeWorkspace?.role === "owner";
   const currentUserId = currentUser.data?.data.user.id;
+  const ownerCount = (members.data?.data.members ?? []).filter((member) => member.role === "owner").length;
 
   async function handleRoleChange(memberId: string, event: ChangeEvent<HTMLSelectElement>) {
     await updateRole.mutateAsync({ memberId, role: event.target.value as WorkspaceRole });
   }
 
-  async function handleRemove(memberId: string, memberName: string) {
-    if (!window.confirm(`Remove ${memberName} from this workspace?`)) {
+  async function handleRemove(memberId: string, memberName: string, isSelf: boolean) {
+    const confirmationMessage = isSelf ? "Leave this workspace?" : `Remove ${memberName} from this workspace?`;
+    if (!window.confirm(confirmationMessage)) {
       return;
     }
     await removeMember.mutateAsync(memberId);
@@ -43,7 +45,7 @@ export default function MembersSettingsPage() {
         <h1>Members</h1>
         <p className="muted">Manage roles and access for the active workspace.</p>
         {!canManageMembers && activeWorkspace ? (
-          <p className="muted">Only workspace owners and admins can change roles or remove members.</p>
+          <p className="muted">Only workspace owners and admins can manage other members. You can still leave a workspace you belong to.</p>
         ) : null}
         {canManageMembers && !canManageOwnership ? (
           <p className="muted">Only workspace owners can grant, revoke, or remove owner roles.</p>
@@ -56,14 +58,17 @@ export default function MembersSettingsPage() {
             <p className="muted">No members found for this workspace yet.</p>
           ) : null}
           {(members.data?.data.members ?? []).map((member) => {
+            const isSelf = member.user_id === currentUserId;
             const canManageThisMember = canManageMembers && (canManageOwnership || member.role !== "owner");
+            const canLeaveWorkspace = isSelf && (member.role !== "owner" || ownerCount > 1);
+            const canShowRemoveAction = isSelf ? canLeaveWorkspace : canManageThisMember;
             return (
               <div className="list-row" key={String(member.id)}>
                 <div>
                   <strong>{String(member.name)}</strong>
                   <p className="muted">
                     {String(member.email)}
-                    {member.user_id === currentUserId ? " (You)" : ""}
+                    {isSelf ? " (You)" : ""}
                   </p>
                 </div>
                 <div className="list-row__actions">
@@ -81,13 +86,15 @@ export default function MembersSettingsPage() {
                   ) : (
                     <strong>{member.role}</strong>
                   )}
-                  <Button
-                    disabled={!canManageThisMember || updateRole.isPending || removeMember.isPending}
-                    onClick={() => void handleRemove(member.id, member.name)}
-                    type="button"
-                  >
-                    {member.user_id === currentUserId ? "Leave" : "Remove"}
-                  </Button>
+                  {canShowRemoveAction ? (
+                    <Button
+                      disabled={updateRole.isPending || removeMember.isPending}
+                      onClick={() => void handleRemove(member.id, member.name, isSelf)}
+                      type="button"
+                    >
+                      {isSelf ? "Leave" : "Remove"}
+                    </Button>
+                  ) : null}
                 </div>
               </div>
             );

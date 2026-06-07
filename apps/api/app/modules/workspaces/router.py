@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
+from app.core.errors import AppError
 from app.db.session import get_session
 from app.modules.auth.service import require_active_user
 from app.modules.users.models import User
@@ -100,6 +101,9 @@ def delete_workspace_member(
     current_user: User = Depends(require_active_user),
     session: Session = Depends(get_session),
 ):
-    _, actor_member = require_workspace_admin(session, workspace_id, current_user.id)
+    _, actor_member = require_workspace_member(session, workspace_id, current_user.id)
+    if actor_member.id != member_id and actor_member.role not in {"owner", "admin"}:
+        raise AppError(code="workspace_forbidden", message="You do not have permission for this action", status_code=403)
     remove_member(session, workspace_id, actor_member, member_id)
-    return {"data": {"success": True}, "message": "Member removed"}
+    message = "Left workspace" if actor_member.id == member_id else "Member removed"
+    return {"data": {"success": True}, "message": message}

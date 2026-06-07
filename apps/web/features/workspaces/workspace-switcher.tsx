@@ -15,7 +15,7 @@ export function WorkspaceSwitcher() {
   }
 
   return (
-    <label className="stack stack--tight">
+    <label className="sidebar__workspace">
       <span className="muted">Active workspace</span>
       <select
         className="input"

@@ -70,7 +70,7 @@ export function InvitePanel({ workspaceId }: { workspaceId: string | null }) {
       {createInvite.data?.data.invite.invite_url ? <p className="success">Invite URL: {createInvite.data.data.invite.invite_url}</p> : null}
       {createInvite.error ? <p className="error">{createInvite.error.message}</p> : null}
       {cancelInvite.error ? <p className="error">{cancelInvite.error.message}</p> : null}
-      <div className="stack stack--tight">
+      <div className="invite-panel__list stack stack--tight">
         {invites.isPending ? <p className="muted">Loading invites...</p> : null}
         {!invites.isPending && (invites.data?.data.invites ?? []).length === 0 ? (
           <p className="muted">No invites sent for this workspace yet.</p>
