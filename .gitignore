@@ -27,6 +27,7 @@ node_modules/
 .pnpm-store/
 .corepack/
 .next/
+apps/web/next-env.d.ts
 coverage/
 dist/
 build/
