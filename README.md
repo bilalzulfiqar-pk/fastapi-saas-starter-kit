@@ -1,8 +1,18 @@
 # FastAPI SaaS Starter Kit
 
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.116%2B-009688?logo=fastapi&logoColor=white)
+![SQLModel](https://img.shields.io/badge/SQLModel-0.0.24%2B-1F2937?logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=0A0A0A)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-green?logo=open-source-initiative&logoColor=white)
+
 A reusable SaaS starter kit built with `Next.js 16`, `FastAPI`, `PostgreSQL`, `SQLModel`, `Redis`, and `Docker Compose`.
 
-This repository is meant to give you the shared SaaS foundation first, so you can add your real product module after auth, workspaces, invites, billing-ready models, and deployment basics are already in place.
+This repository gives you the shared SaaS foundation first, so you can add your real product module after auth, workspaces, invites, billing-ready models, and deployment basics are already in place.
 
 ## Who this starter is for
 
@@ -10,16 +20,7 @@ This repository is meant to give you the shared SaaS foundation first, so you ca
 - Developers who want cookie-first auth, multi-tenant workspaces, and team management without starting from zero
 - Builders who want a Docker-first local workflow with lightweight but real verification
 
-## Tech stack
-
-- Frontend: `Next.js 16`, App Router, React 19, TanStack Query
-- Backend: `FastAPI`, `SQLModel`, Alembic
-- Data: PostgreSQL
-- Caching / limits: Redis
-- Local runtime: Docker Compose
-- Tests: pytest, Vitest
-
-## MVP foundation included
+## What ships in the MVP
 
 - Cookie-first auth with secure defaults
 - Users and profile settings
@@ -31,7 +32,7 @@ This repository is meant to give you the shared SaaS foundation first, so you ca
 - Redis-backed rate limiting with in-memory fallback
 - Docker Compose and starter documentation
 
-## Intentionally out of scope
+## What is intentionally out of scope
 
 - Product-specific modules such as CRM, inventory, LMS, booking, support, or AI/RAG
 - API keys
@@ -39,6 +40,15 @@ This repository is meant to give you the shared SaaS foundation first, so you ca
 - Password reset and email verification
 - Real email delivery providers
 - Stripe checkout, customer portal, and webhooks
+
+## Tech stack
+
+- Frontend: `Next.js 16`, App Router, React 19, TanStack Query
+- Backend: `FastAPI`, `SQLModel`, Alembic
+- Data: PostgreSQL
+- Caching / limits: Redis
+- Local runtime: Docker Compose
+- Tests: pytest and Vitest
 
 ## Repository layout
 
@@ -48,6 +58,25 @@ apps/web     Next.js frontend, frontend tests
 docs/        Architecture, API, security, deployment, and starter guidance
 scripts/     Optional verification helpers
 ```
+
+## Architecture at a glance
+
+```mermaid
+flowchart LR
+  Browser["Browser / Next.js 16 App"] --> Proxy["proxy.ts + AuthGuard + WorkspaceGuard"]
+  Proxy --> API["FastAPI API"]
+  API --> DB["PostgreSQL"]
+  API --> Redis["Redis"]
+  API --> Email["ConsoleEmailProvider"]
+```
+
+Short version:
+
+- the frontend handles routing, dashboard UI, and TanStack Query hooks
+- the backend owns auth, workspace rules, invites, billing-ready models, and persistence
+- PostgreSQL stores application data
+- Redis powers shared rate limiting in runtime environments
+- the email adapter stays pluggable while v1 uses `ConsoleEmailProvider`
 
 ## Requirements
 
@@ -59,8 +88,15 @@ scripts/     Optional verification helpers
 
 ## Quick start
 
-1. Copy `.env.example` to `.env`.
-2. Run:
+1. Clone the repository:
+
+```bash
+git clone <your-fork-or-repo-url>
+cd fastapi-saas-starter-kit
+```
+
+2. Copy `.env.example` to `.env`.
+3. Start the local stack:
 
 ```bash
 docker compose up --build
@@ -72,17 +108,51 @@ If you already have `pnpm` installed, the root shortcut below does the same thin
 pnpm dev
 ```
 
-Then open:
+4. Open:
 
 - App: `http://localhost:3000`
 - API health: `http://localhost:8000/health`
 - API readiness: `http://localhost:8000/readiness`
+
+5. Register the first account and create the first workspace in onboarding.
+
+There is no seed script in the MVP starter. The intended first-run flow is:
+
+1. register a user
+2. complete onboarding
+3. create the first workspace
 
 To stop the stack:
 
 ```bash
 docker compose down
 ```
+
+## Environment variables
+
+All required starter variables are shown in [.env.example](.env.example).
+
+| Variable | Description | Example |
+| --- | --- | --- |
+| `APP_NAME` | Human-readable application name used by the backend | `FastAPI SaaS Starter Kit` |
+| `APP_ENV` | Runtime environment name | `development` |
+| `APP_URL` | Public frontend URL used by backend-generated links | `http://localhost:3000` |
+| `API_URL` | Public backend URL | `http://localhost:8000` |
+| `NEXT_PUBLIC_APP_URL` | Frontend runtime app URL for browser code | `http://localhost:3000` |
+| `NEXT_PUBLIC_API_URL` | Frontend runtime API URL for browser code | `http://localhost:8000` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql+psycopg://postgres:postgres@db:5432/saas_starter` |
+| `SECRET_KEY` | Signing key for auth tokens and session-related secrets | `change-me-please-with-at-least-32-bytes` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access-cookie lifetime in minutes | `15` |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh-cookie lifetime in days | `30` |
+| `COOKIE_DOMAIN` | Cookie domain. Leave blank in local development for host-only cookies | `""` |
+| `COOKIE_SECURE` | Whether cookies require HTTPS | `false` |
+| `COOKIE_SAMESITE` | SameSite cookie policy | `lax` |
+| `ACCESS_COOKIE_NAME` | Access cookie name | `saas_access_token` |
+| `REFRESH_COOKIE_NAME` | Refresh cookie name | `saas_refresh_token` |
+| `SESSION_COOKIE_NAME` | Lightweight session marker cookie name | `saas_session` |
+| `FRONTEND_ORIGINS` | Trusted browser origins for unsafe request validation | `http://localhost:3000,http://web:3000` |
+| `REDIS_URL` | Redis connection string for shared rate limiting | `redis://redis:6379/0` |
+| `LOG_LEVEL` | Backend log verbosity | `INFO` |
 
 ## Root commands
 
